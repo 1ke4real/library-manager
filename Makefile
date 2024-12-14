@@ -4,7 +4,7 @@
 #######################################
 
 
-PROJECT_NAME = php-nginx
+PROJECT_NAME = library-manager
 DOCKER_COMPOSE = docker-compose --project-name $(PROJECT_NAME)
 
 #######################################
@@ -76,3 +76,23 @@ init-db: ## 🗄️ Initialize Symfony database and install ORM dependencies
 	$(DOCKER_COMPOSE) exec php composer require symfony/orm-pack
 	$(DOCKER_COMPOSE) exec php composer require --dev symfony/maker-bundle
 	make reload
+
+#######################################
+## 📦 Code Quality
+#######################################
+.PHONY: eslint phpstan insights
+eslint: ## 🔎 Run ESLint
+	yarn lint
+
+phpstan: ## 🔎 Run PHPStan
+	$(DOCKER_COMPOSE) exec php php vendor/bin/phpstan analyse src --level=max
+php-cs-fixer: ## 🔎 Run PHP-CS-Fixer
+	$(DOCKER_COMPOSE) exec php php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php
+insights: ## 🔎 Run PHP Insights
+	$(DOCKER_COMPOSE) exec php php ./vendor/bin/phpinsights --no-interaction
+
+quality: ## 🔎 Run all code quality tools
+	make eslint
+	make phpstan
+	make php-cs-fixer
+	make insights
